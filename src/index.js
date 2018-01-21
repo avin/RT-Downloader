@@ -29,14 +29,19 @@ const getFolderSize = folder =>
         ) {
             const tracksData = await request({
                 method: 'GET',
-                url: `https://www.radiotunes.com/_papi/v1/radiotunes/routines/channel/186?audio_token=${config.token}&_=${+new Date()}`,
+                url: `https://www.radiotunes.com/_papi/v1/radiotunes/routines/channel/${channel.id}?audio_token=${config.token}&_=${+new Date()}`,
                 json: true,
                 proxy: config.proxy,
+                headers: {
+                    'user-agent': config.userAgent,
+                    'x-session-key': config.xSessionKey,
+                },
             });
 
             if (tracksData.tracks) {
                 for (const track of tracksData.tracks) {
                     const url = track.content.assets[0].url;
+
                     const name = `${track.display_artist} - ${track.display_title}.mp4`.replace(
                         /[`~!@#$^&*?;:'"<>{}\[\]\\\/]/gi,
                         '',

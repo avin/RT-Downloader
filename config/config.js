@@ -4,8 +4,11 @@ export default {
     token: process.env.TOKEN,
     proxy: process.env.PROXY,
 
+    userAgent: process.env.USER_AGENT,
+    xSessionKey: process.env.X_SESSION_KEY,
+
     filesPerChannel: 9999,
-    maxSizePerChannel: 1000 * 1024 * 1024, // 1MB = 1024 * 1024
+    maxSizePerChannel: 1000 * 1024 * 1024, // 1MB = 1024 * 1024,
 
     channels: [
         { id: 440, name: '00s Rock' },
