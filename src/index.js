@@ -42,7 +42,7 @@ const getFolderSize = folder =>
                 for (const track of tracksData.tracks) {
                     const url = track.content.assets[0].url;
 
-                    const name = `${track.display_artist} - ${track.display_title}.mp4`.replace(
+                    const name = `${track.display_artist} - ${track.display_title}.m4a`.replace(
                         /[`~!@#$^&*?;:'"<>{}\[\]\\\/]/gi,
                         '',
                     );
