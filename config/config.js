@@ -17,7 +17,6 @@ export default {
         // DI.FM
         // =========================
 
-        // { id: 438, name: 'Synthwave' },
         // { id: 403, name: 'atmosphericbreaks' },
         // { id: 290, name: 'bassnjackinhouse' },
         // { id: 289, name: 'bassline' },
