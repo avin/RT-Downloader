@@ -1,102 +1,125 @@
-import request from 'request-promise';
-import fs from 'fs-extra';
-import getSize from 'get-folder-size';
-import config from '../config/config';
+import figlet from 'figlet';
+import chalk from 'chalk';
+import yargs from 'yargs';
+import config from './config';
+import NetworkAgent from './NetworkAgent';
+import QuestionMaster from './QuestionMaster';
+import CacheAgent from './CacheAgent';
 
-config.filesPerChannel = config.filesPerChannel || 10;
-config.maxSizePerChannel = config.maxSizePerChannel || 0;
+(async function main(firstRun) {
+  await config.loadConfig();
 
-const getFolderSize = folder =>
-    new Promise((resolve, reject) =>
-        getSize(folder, function(err, size) {
-            if (err) {
-                reject(err);
-            }
-            resolve(size);
-        }),
-    );
+  const { argv } = yargs.option('clear', {
+    alias: 'c',
+    type: 'boolean',
+    description: 'Clear cache',
+  });
 
-(async () => {
-    for (const channel of config.channels) {
-        process.stdout.write(`\n${channel.name}: `);
-        let downloadedCount = 0;
-        const folder = `data/audio/${channel.name}`;
-        await fs.ensureDir(folder);
+  const qm = new QuestionMaster();
 
-        while (
-            downloadedCount <= config.filesPerChannel &&
-            !(config.maxSizePerChannel && (await getFolderSize(folder)) > config.maxSizePerChannel)
-        ) {
-            const tracksData = await request({
-                method: 'GET',
-                url: `https://www.radiotunes.com/_papi/v1/radiotunes/routines/channel/${channel.id}?audio_token=${config.token}&_=${+new Date()}`,
-                json: true,
-                proxy: config.proxy,
-                headers: {
-                    'user-agent': config.userAgent,
-                    'x-session-key': config.xSessionKey,
-                },
-            });
+  if (firstRun) {
+    if (!config.get('xSessionKey')) {
+      const key = await qm.typeXSessionKey();
+      if (!key) {
+        return process.exit();
+      }
 
-            if (tracksData.tracks) {
-                for (const track of tracksData.tracks) {
-                    const url = track.content.assets[0].url;
+      await config.updateConfig({ xSessionKey: key });
+    }
 
-                    const name = `${track.display_artist} - ${track.display_title}.m4a`.replace(
-                        /[`~!@#$^&*?;:'"<>{}\[\]\\\/]/gi,
-                        '',
-                    );
+    // Clear cache
+    if (argv.c) {
+      const cacheAgent = new CacheAgent();
+      await cacheAgent.clearCache();
+      console.info(chalk.green('Cache has been cleared successfully!'));
+      process.exit(0);
+    }
 
-                    //Read history
-                    const historyFolder = `data/db`;
-                    const historyFile = `${historyFolder}/${channel.id}`;
-                    let history = [];
-                    try {
-                        await fs.ensureDir(historyFolder);
-                        let content = await fs.readFile(historyFile);
+    // Print welcome message
+    console.info(chalk.green(figlet.textSync('RT-Downloader')));
+  }
 
-                        history = JSON.parse(content);
-                    } catch (err) {}
+  // Select station to work with and init agent for it
+  const station = await qm.selectStation();
+  if (station === 'exit') {
+    process.exit(0);
+  }
 
-                    //If file does not exist in history
-                    if (!history.includes(track.id)) {
-                        const fileName = `${folder}/${name}`;
+  const agent = new NetworkAgent({
+    station,
+  });
+  qm.setAgent(agent);
 
-                        //Let's download it
-                        const res = await request({
-                            method: 'GET',
-                            url: `http:${url}`,
-                            encoding: null,
-                            proxy: config.proxy,
-                        });
-                        const buffer = Buffer.from(res, 'utf8');
+  return (async function whatToDo() {
+    const toDo = await qm.selectToDo(station);
 
-                        //Save to disk
-                        try {
-                            await fs.writeFile(fileName, buffer);
-                            downloadedCount += 1;
-                        } catch (err) {
-                            console.log('Oops! File write error: ', err.message);
-                        }
-
-                        //Add record to history
-                        history.push(track.id);
-                        await fs.writeFile(historyFile, JSON.stringify(history), 'utf8'); // write it back
-
-                        process.stdout.write(`+`);
-
-                        if (downloadedCount > config.filesPerChannel) {
-                            break;
-                        }
-
-                        if (config.maxSizePerChannel && (await getFolderSize(folder)) > config.maxSizePerChannel) {
-                            break;
-                        }
-                    }
-                }
-            }
+    switch (toDo) {
+      case 'download-shows': {
+        const howToSelectShow = await qm.selectHowToSelectShow();
+        let shows;
+        switch (howToSelectShow) {
+          case 'all': {
+            shows = await agent.getShows();
+            break;
+          }
+          case 'channels': {
+            const channel = await qm.selectChannel();
+            shows = await agent.getShows({ ofChannel: channel });
+            break;
+          }
+          case 'back': {
+            return whatToDo();
+          }
+          default:
+            throw new Error('unknown answer');
         }
 
-        process.stdout.write('\n');
+        const show = await qm.selectShow(shows);
+
+        const howMany = await qm.howMany({
+          message: 'How many recent episodes to download?',
+        });
+
+        const episodes = await agent.getShowEpisodes(show, { limit: howMany });
+
+        await agent.downloadShowEpisodes({ episodes, showSlug: show });
+
+        break;
+      }
+      case 'download-playlist': {
+        const playlists = await agent.getPlaylists();
+        const playlistId = await qm.selectPlaylist(playlists);
+        const playList = playlists.find((i) => i.id === playlistId);
+
+        await agent.downloadPlaylistTracks({
+          playlistId,
+          playlistName: playList.slug,
+          listLength: playList.track_count,
+        });
+        break;
+      }
+      case 'download-random-tracks': {
+        const channel = await qm.selectChannel();
+        const channelId = (await agent.getChannels()).find((i) => i.key === channel).id;
+
+        const howMany = await qm.howMany({
+          message: 'How many tracks to download?',
+        });
+
+        await agent.downloadChannelTracks({
+          channelId,
+          channelName: channel,
+          limit: howMany,
+        });
+
+        break;
+      }
+      case 'back': {
+        return main();
+      }
+      default:
     }
-})();
+
+    return whatToDo();
+  })();
+})(true);
