@@ -94,7 +94,7 @@ export default class NetworkAgent {
         }
       }
 
-      finalResults = _.sortBy([finalResults], 'name');
+      finalResults = _.sortBy(finalResults, 'name');
 
       await this.cache.setItem([this.station, 'shows'], finalResults);
     }
@@ -199,7 +199,7 @@ export default class NetworkAgent {
         }
       }
 
-      finalResults = _.sortBy([finalResults], 'name');
+      finalResults = _.sortBy(finalResults, 'name');
 
       await this.cache.setItem([this.station, 'playlists'], finalResults);
     }
