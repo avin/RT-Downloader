@@ -44,10 +44,12 @@ export default class NetworkAgent {
       ...this._getCommonRequestOptions(),
     });
 
-    const result = data.map((i) => ({
+    let result = data.map((i) => ({
       id: i.channel_id,
       key: i.channel_key,
     }));
+
+    result = _.sortBy(result, 'key');
 
     await this.cache.setItem([this.station, 'channels'], result);
 
@@ -249,9 +251,21 @@ export default class NetworkAgent {
     process.stdout.write('\nDone!\n\n');
   }
 
-  async downloadChannelTracks({ channelId, channelName, limit = 1 }) {
+  async downloadChannelTracks({
+    channelId,
+    channelName,
+    limit = 1,
+    isStrongLimit = false,
+    isShowDone = true,
+  }) {
     let inProgress = true;
     let total = 0;
+
+    const targetPath = `./downloads/channels/${channelName}`;
+    if (isStrongLimit && fs.pathExistsSync(targetPath)) {
+      const existFilesCount = (await fs.readdir(targetPath)).length;
+      total += existFilesCount;
+    }
 
     process.stdout.write('Downloading: ');
 
@@ -263,6 +277,11 @@ export default class NetworkAgent {
       });
 
       for (const track of data.tracks) {
+        if (total >= limit) {
+          inProgress = false;
+          break;
+        }
+
         await this.markTrackAsPlayed({ channelId, trackId: track.id });
 
         const url = _.get(track, ['content', 'assets', 0, 'url']);
@@ -272,7 +291,7 @@ export default class NetworkAgent {
         try {
           await this.downloadFile({
             url,
-            location: `./downloads/channels/${channelName}`,
+            location: targetPath,
             fileName: `${trackName}.${ext}`,
           });
           process.stdout.write('.');
@@ -280,15 +299,12 @@ export default class NetworkAgent {
           process.stdout.write('X');
         }
         total += 1;
-
-        if (total >= limit) {
-          inProgress = false;
-          break;
-        }
       }
     }
 
-    process.stdout.write('\nDone!\n\n');
+    if (isShowDone) {
+      process.stdout.write('\nDone!\n\n');
+    }
   }
 
   async markTrackAsPlayed({ playlistId, channelId, trackId }) {

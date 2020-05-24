@@ -113,7 +113,11 @@ export default class QuestionMaster {
           station === 'di' && { name: 'Download shows', value: 'download-shows' },
           station === 'di' && { name: 'Download playlist', value: 'download-playlist' },
 
-          { name: 'Download random channel tracks', value: 'download-random-tracks' },
+          { name: 'Download [N] tracks of channel [X]', value: 'download-random-tracks' },
+          {
+            name: 'Download [N] tracks of each channel',
+            value: 'download-random-tracks-each-channel',
+          },
 
           goBackAnswer,
         ].filter(Boolean),

@@ -114,6 +114,26 @@ import CacheAgent from './CacheAgent';
 
         break;
       }
+      case 'download-random-tracks-each-channel': {
+        const howMany = await qm.howMany({
+          message: 'How many tracks to download?',
+        });
+
+        const channels = await agent.getChannels();
+
+        for (const channel of channels) {
+          console.info(`\nChannel: ${chalk.bold(channel.key)}:`);
+          await agent.downloadChannelTracks({
+            channelId: channel.id,
+            channelName: channel.key,
+            limit: howMany,
+            isStrongLimit: true,
+            isShowDone: false,
+          });
+        }
+        console.info(`\nDone!\n`);
+        break;
+      }
       case 'back': {
         return main();
       }
