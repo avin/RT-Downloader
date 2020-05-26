@@ -147,7 +147,7 @@ export default class NetworkAgent {
       try {
         await this.downloadFile({
           url,
-          location: `./downloads/shows/${showSlug}`,
+          location: `${config.get('downloadLocation')}/${this.station}/shows/${showSlug}`,
           fileName: `${trackName}.${ext}`,
         });
         process.stdout.write('.');
@@ -155,8 +155,6 @@ export default class NetworkAgent {
         process.stdout.write('X');
       }
     }
-
-    process.stdout.write('\nDone!\n\n');
   }
 
   /**
@@ -232,7 +230,7 @@ export default class NetworkAgent {
         try {
           await this.downloadFile({
             url,
-            location: `./downloads/playlists/${playlistName}`,
+            location: `${config.get('downloadLocation')}/${this.station}/playlists/${playlistName}`,
             fileName: `${trackName}.${ext}`,
           });
           process.stdout.write('.');
@@ -247,8 +245,6 @@ export default class NetworkAgent {
         }
       }
     }
-
-    process.stdout.write('\nDone!\n\n');
   }
 
   async downloadChannelTracks({
@@ -261,7 +257,7 @@ export default class NetworkAgent {
     let inProgress = true;
     let total = 0;
 
-    const targetPath = `./downloads/channels/${channelName}`;
+    const targetPath = `${config.get('downloadLocation')}/${this.station}/channels/${channelName}`;
     if (isStrongLimit && fs.pathExistsSync(targetPath)) {
       const existFilesCount = (await fs.readdir(targetPath)).length;
       total += existFilesCount;
@@ -326,7 +322,8 @@ export default class NetworkAgent {
    * @param fileName - file name (without directory)
    * @param location - directory to store file
    */
-  async downloadFile({ url, fileName, location = './downloads' }) {
+  async downloadFile({ url, fileName, location }) {
+    location = location || `${config.get('downloadLocation')}/${this.station}`;
     url = url.replace(/^\/\//, 'https://');
     await fs.mkdirp(location);
     fileName = fileName || `unknown-${+new Date()}`;

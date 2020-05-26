@@ -14,6 +14,8 @@ class Config {
     // Auth session (grab from browser)
     xSessionKey: '',
 
+    downloadLocation: './downloads',
+
     // List of all radio-stations
     stations: [
       { name: 'DI.FM', value: 'di' },
@@ -47,6 +49,8 @@ class Config {
     await this.prepareConfigFolder();
 
     Object.assign(this._state, newConfigState);
+
+    this._state.downloadLocation = this._state.downloadLocation.replace(/[/\\]$/, '');
 
     await fs.writeJson(this.getConfigFilePath(), this._state, { spaces: 4 });
   }

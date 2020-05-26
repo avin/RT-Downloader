@@ -16,7 +16,7 @@ export default class CacheAgent {
     if (!this.cache) {
       try {
         await fs.mkdirp(this.cacheLocation);
-        this.cache = await fs.readJson();
+        this.cache = await fs.readJson(this.getCacheFilePath());
       } catch (e) {
         this.cache = {};
       }

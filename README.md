@@ -15,18 +15,21 @@
 
 `npm install -g rt-downloader`
 
-## Usage
+## Setup
 
-- Run `rt-downloader` after install.
+Run `rt-downloader` first time. (it will prepare config file with default values at `$HOME/.rt-downloader/config.json`)
 
-- Copy your `x-session-key` from headers of `di.fm` after authentication (check image below)
+Copy your `x-session-key` from headers of `di.fm` after authentication (check image below)
 
 ![where is a key](./additional/key.png 'Get key')
 
-Or setup it manually in a config: `$HOME/.rt-downloader/config.json`.
-(You have to start script at least once to config appear)
+You can setup it manually in a config: `$HOME/.rt-downloader/config.json`.
+(You have to start script at least once to config appear).
 
-- Follow the on-screen instructions.
+To change download folder use option `downloadLocation`. For example
+```json
+"downloadLocation": "z:\\MUSIC\\Radio", 
+```
 
 ## Clear cache
 

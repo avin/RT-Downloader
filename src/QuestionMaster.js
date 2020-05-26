@@ -72,7 +72,7 @@ export default class QuestionMaster {
     return answer;
   }
 
-  async selectShow(shows) {
+  async selectShows(shows) {
     const questions = shows.map((i) => ({
       name: i.cliName,
       value: i.slug,
@@ -80,6 +80,7 @@ export default class QuestionMaster {
     const { answer } = await inquirer.prompt([
       {
         ...defaultOfListQuestion,
+        type: 'checkbox',
         message: 'What show do you want?',
         choices: questions,
       },
@@ -88,7 +89,8 @@ export default class QuestionMaster {
     return answer;
   }
 
-  async selectPlaylist(playlists) {
+  async selectPlaylists() {
+    const playlists = await this.agent.getPlaylists();
     const questions = playlists.map((i) => ({
       name: i.cliName,
       value: i.id,
@@ -96,7 +98,8 @@ export default class QuestionMaster {
     const { answer } = await inquirer.prompt([
       {
         ...defaultOfListQuestion,
-        message: 'What playlist do you want?',
+        type: 'checkbox',
+        message: 'What playlists do you want?',
         choices: questions,
       },
     ]);
@@ -111,13 +114,9 @@ export default class QuestionMaster {
         message: 'What to do?',
         choices: [
           station === 'di' && { name: 'Download shows', value: 'download-shows' },
-          station === 'di' && { name: 'Download playlist', value: 'download-playlist' },
+          station === 'di' && { name: 'Download playlists', value: 'download-playlists' },
 
-          { name: 'Download [N] tracks of channel [X]', value: 'download-random-tracks' },
-          {
-            name: 'Download [N] tracks of each channel',
-            value: 'download-random-tracks-each-channel',
-          },
+          { name: 'Download tracks of channels', value: 'download-channels-tracks' },
 
           goBackAnswer,
         ].filter(Boolean),
@@ -137,6 +136,26 @@ export default class QuestionMaster {
     const { answer } = await inquirer.prompt([
       {
         type: 'list',
+        pageSize: 20,
+        name: 'answer',
+        message,
+        choices: questionChannels,
+      },
+    ]);
+
+    return answer;
+  }
+
+  async selectChannels({ message = 'Select channels' } = {}) {
+    const channels = await this.agent.getChannels();
+    const questionChannels = channels.map((i) => ({
+      name: i.key,
+      value: i.key,
+    }));
+
+    const { answer } = await inquirer.prompt([
+      {
+        type: 'checkbox',
         pageSize: 20,
         name: 'answer',
         message,

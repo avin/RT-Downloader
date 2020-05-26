@@ -50,6 +50,57 @@ import CacheAgent from './CacheAgent';
   });
   qm.setAgent(agent);
 
+  /**
+   * Download playlists
+   * @param playlistIds
+   */
+  async function downloadPlaylists({ playlistIds }) {
+    const playlists = await agent.getPlaylists();
+
+    for (const playlistId of playlistIds) {
+      const playList = playlists.find((i) => i.id === playlistId);
+      console.info(`\nPlaylist: ${chalk.bold(playList.slug)}`);
+
+      await agent.downloadPlaylistTracks({
+        playlistId,
+        playlistName: playList.slug,
+        listLength: playList.track_count,
+      });
+    }
+  }
+
+  /**
+   * Download channels tracks
+   * @param channelKeys
+   * @param howMany
+   */
+  async function downloadChannelsTracks({ channelKeys, howMany }) {
+    for (const channelKey of channelKeys) {
+      const channel = (await agent.getChannels()).find((i) => i.key === channelKey);
+
+      console.info(`\nChannel: ${chalk.bold(channel.key)}`);
+      await agent.downloadChannelTracks({
+        channelId: channel.id,
+        channelName: channel.key,
+        limit: howMany,
+        isStrongLimit: true,
+        isShowDone: false,
+      });
+    }
+  }
+
+  async function downloadShows({ showsList, howMany }) {
+    for (const show of showsList) {
+      console.info(`\nShow: ${chalk.bold(show)}`);
+
+      const episodes = await agent.getShowEpisodes(show, { limit: howMany });
+      await agent.downloadShowEpisodes({ episodes, showSlug: show });
+    }
+  }
+
+  /**
+   * Main
+   */
   return (async function whatToDo() {
     const toDo = await qm.selectToDo(station);
 
@@ -74,63 +125,31 @@ import CacheAgent from './CacheAgent';
             throw new Error('unknown answer');
         }
 
-        const show = await qm.selectShow(shows);
+        const showsList = await qm.selectShows(shows);
 
         const howMany = await qm.howMany({
           message: 'How many recent episodes to download?',
         });
 
-        const episodes = await agent.getShowEpisodes(show, { limit: howMany });
-
-        await agent.downloadShowEpisodes({ episodes, showSlug: show });
+        await downloadShows({ showsList, howMany });
 
         break;
       }
-      case 'download-playlist': {
-        const playlists = await agent.getPlaylists();
-        const playlistId = await qm.selectPlaylist(playlists);
-        const playList = playlists.find((i) => i.id === playlistId);
+      case 'download-playlists': {
+        const playlistIds = await qm.selectPlaylists();
 
-        await agent.downloadPlaylistTracks({
-          playlistId,
-          playlistName: playList.slug,
-          listLength: playList.track_count,
-        });
+        await downloadPlaylists({ playlistIds });
         break;
       }
-      case 'download-random-tracks': {
-        const channel = await qm.selectChannel();
-        const channelId = (await agent.getChannels()).find((i) => i.key === channel).id;
+      case 'download-channels-tracks': {
+        const channelKeys = await qm.selectChannels();
 
         const howMany = await qm.howMany({
           message: 'How many tracks to download?',
         });
 
-        await agent.downloadChannelTracks({
-          channelId,
-          channelName: channel,
-          limit: howMany,
-        });
+        await downloadChannelsTracks({ channelKeys, howMany });
 
-        break;
-      }
-      case 'download-random-tracks-each-channel': {
-        const howMany = await qm.howMany({
-          message: 'How many tracks to download?',
-        });
-
-        const channels = await agent.getChannels();
-
-        for (const channel of channels) {
-          console.info(`\nChannel: ${chalk.bold(channel.key)}:`);
-          await agent.downloadChannelTracks({
-            channelId: channel.id,
-            channelName: channel.key,
-            limit: howMany,
-            isStrongLimit: true,
-            isShowDone: false,
-          });
-        }
         console.info(`\nDone!\n`);
         break;
       }
