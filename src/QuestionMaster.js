@@ -4,7 +4,7 @@ import config from './config';
 
 const defaultOfListQuestion = {
   type: 'list',
-  pageSize: 40,
+  pageSize: 20,
   name: 'answer',
 };
 
