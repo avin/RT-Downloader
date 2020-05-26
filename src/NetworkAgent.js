@@ -126,7 +126,7 @@ export default class NetworkAgent {
       });
 
       finalResults = [...finalResults, ...results];
-      if (results.length < perPage || results.length >= limit) {
+      if (results.length < perPage || finalResults.length >= limit) {
         inProgress = false;
       } else {
         page += 1;
@@ -142,7 +142,9 @@ export default class NetworkAgent {
     for (const episode of episodes) {
       const url = _.get(episode, ['tracks', 0, 'content', 'assets', 0, 'url']);
       const ext = _.last(url.split('?')[0].split('.'));
-      const trackName = sanitizeFileName(_.get(episode, ['tracks', 0, 'track']));
+      const trackName = sanitizeFileName(
+        `${_.get(episode, ['slug'])} | ${_.get(episode, ['tracks', 0, 'track'])}`,
+      );
 
       try {
         await this.downloadFile({
