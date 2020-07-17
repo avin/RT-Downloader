@@ -22,7 +22,7 @@
     "figlet": "1.4.0",
     "fs-extra": "9.0.0",
     "inquirer": "7.1.0",
-    "lodash": "4.17.15",
+    "lodash": "4.17.19",
     "request": "2.88.2",
     "request-promise": "4.2.5",
     "sanitize-filename": "1.6.3",
