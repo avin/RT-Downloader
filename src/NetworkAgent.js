@@ -79,7 +79,7 @@ export default class NetworkAgent {
       while (inProgress) {
         let { results } = await request({
           method: 'GET',
-          url: `https://www.di.fm/_papi/v1/${this.station}/shows?page=${page}&per_page=${perPage}`,
+          url: `https://api.audioaddict.com/v1/${this.station}/shows?page=${page}&per_page=${perPage}`,
           ...this._getCommonRequestOptions(),
         });
 
@@ -121,7 +121,7 @@ export default class NetworkAgent {
     while (inProgress) {
       const results = await request({
         method: 'GET',
-        url: `https://www.di.fm/_papi/v1/${this.station}/shows/${show}/episodes?page=${page}&per_page=${perPage}`,
+        url: `https://api.audioaddict.com/v1/${this.station}/shows/${show}/episodes?page=${page}&per_page=${perPage}`,
         ...this._getCommonRequestOptions(),
       });
 
@@ -182,7 +182,7 @@ export default class NetworkAgent {
       while (inProgress) {
         let { results } = await request({
           method: 'GET',
-          url: `https://www.di.fm/_papi/v1/di/search/playlists?order_by=newest_sort+desc&page=${page}&per_page=${perPage}`,
+          url: `https://api.audioaddict.com/v1/di/search/playlists?order_by=newest_sort+desc&page=${page}&per_page=${perPage}`,
           ...this._getCommonRequestOptions(),
         });
 
@@ -218,7 +218,7 @@ export default class NetworkAgent {
     while (inProgress) {
       const data = await request({
         method: 'POST',
-        url: `https://www.di.fm/_papi/v1/di/playlists/${playlistId}/play`,
+        url: `https://api.audioaddict.com/v1/di/playlists/${playlistId}/play`,
         ...this._getCommonRequestOptions(),
       });
 
@@ -270,7 +270,7 @@ export default class NetworkAgent {
     while (inProgress) {
       const data = await request({
         method: 'GET',
-        url: `https://www.di.fm/_papi/v1/di/routines/channel/${channelId}`,
+        url: `https://api.audioaddict.com/v1/di/routines/channel/${channelId}`,
         ...this._getCommonRequestOptions(),
       });
 
@@ -308,7 +308,7 @@ export default class NetworkAgent {
   async markTrackAsPlayed({ playlistId, channelId, trackId }) {
     return request({
       method: 'POST',
-      url: `https://www.di.fm/_papi/v1/di/listen_history`,
+      url: `https://api.audioaddict.com/v1/di/listen_history`,
       body: {
         playlist_id: playlistId,
         track_id: trackId,
