@@ -40,7 +40,7 @@ export default class NetworkAgent {
 
     const data = await request({
       method: 'GET',
-      url: `https://www.jazzradio.com/_papi/v1/${this.station}/currently_playing`,
+      url: `https://api.audioaddict.com/v1/${this.station}/currently_playing`,
       ...this._getCommonRequestOptions(),
     });
 
